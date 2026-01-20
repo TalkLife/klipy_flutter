@@ -148,7 +148,7 @@ class _KlipyTabViewState extends State<KlipyTabView>
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (_appBarProvider.queryText.isEmpty &&
+    if (_appBarProvider.queryText.trim().isEmpty &&
         _appBarProvider.selectedCategory == null &&
         widget.showCategories) {
       return Padding(
@@ -327,7 +327,7 @@ class _KlipyTabViewState extends State<KlipyTabView>
 
       if (widget.onLoad != null) {
         final response = await widget.onLoad?.call(
-          _appBarProvider.queryText,
+          _appBarProvider.queryText.trim(),
           offset,
           requestLimit,
           _appBarProvider.selectedCategory,
@@ -395,6 +395,12 @@ class _KlipyTabViewState extends State<KlipyTabView>
 
   // When the text in the search input changes
   void _appBarProviderListener() {
+    // Prevent searches with only spaces
+    if (_appBarProvider.queryText.isNotEmpty &&
+        _appBarProvider.queryText.trim().isEmpty) {
+      return;
+    }
+
     setState(() {
       _list = [];
       _collection = null;

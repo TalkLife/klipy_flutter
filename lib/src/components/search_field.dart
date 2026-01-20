@@ -244,6 +244,10 @@ class _KlipySearchFieldState extends State<KlipySearchField> {
 
   // listener query
   void _listenerQuery() {
+    // Update only when the text is different. For instance if you tap
+    // on a category. Without this check the cursor will jump to the end.
+    if (_textEditingController.text == _appBarProvider.queryText) return;
+
     _textEditingController.text = _appBarProvider.queryText;
   }
 }
