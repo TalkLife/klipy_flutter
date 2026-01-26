@@ -1,3 +1,9 @@
+## 0.0.3
+
+- chore: update readme, leave note looking for new maintainer
+
+[All Code Changes](https://github.com/Flyclops/klipy_flutter/compare/0.0.2...0.0.3)
+
 ## 0.0.2
 
 - fix: freeze when you type just white space into the input field when categories are visible
