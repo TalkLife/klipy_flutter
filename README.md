@@ -1,3 +1,8 @@
+# ⚠️ NOT MAINTAINED ⚠️
+After exploring the option of using KLIPY we have decided against it.
+
+If you are interested in taking over this repo and package please do not hesitate to reach out via the issues and we will get it sorted out.
+
 # KLIPY Flutter
 
 <p align="center">
@@ -8,7 +13,7 @@
   <a href="https://github.com/Flyclops/klipy_flutter/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-BSD_3--Clause-blue.svg" alt="License BSD 3-Clause" /></a>
 </p>
 
-This package integrates [KLIPY GIF search](https://klipy.com/) into [Flutter](https://flutter.dev/) by utilizing the [klipy_dart](https://pub.dev/packages/klipy_dart) package to communicate directly with the [KLIPY API](https://docs.klipy.com/getting-started) via [http](https://pub.dev/packages/http). We are currently using the [migration from Tenor](https://docs.klipy.com/migrate-from-tenor) option but plan to build this package out to be feature complete with the KLIPY API. 
+This package integrates [KLIPY GIF search](https://klipy.com/) into [Flutter](https://flutter.dev/) by utilizing the [klipy_dart](https://pub.dev/packages/klipy_dart) package to communicate directly with the [KLIPY API](https://docs.klipy.com/getting-started) via [http](https://pub.dev/packages/http). It is currently using the [migration from Tenor](https://docs.klipy.com/migrate-from-tenor) option.
 
 The package currently provides an opinionated yet customizable UI experience for searching and selecting from a list of GIFs/Stickers from the KLIPY GIF search API.
 
@@ -86,19 +91,6 @@ print(result?.media.tinyGif?.url);
 ## Don't need the UI?
 
 If you're seeking a solution that allows for full customization without the need of dependencies then consider [KLIPY Dart](https://github.com/Flyclops/klipy_dart).
-
-## Sponsors
-
-<table>
-  <tr>
-    <td><p align="center"><a href="https://flyclops.com/"><img src="https://github.com/Flyclops/klipy_flutter/blob/main/example/assets/flyclops_logo_github.png?raw=true" alt="Flyclops"/></a></p></td>
-    <td><p align="center"><a href="https://flyclops.com/games/domino.html"><img src="https://github.com/Flyclops/klipy_flutter/blob/main/example/assets/domino_logo_github.png?raw=true" alt="Domino!"/></a></p></td>
-  </tr>
-  <tr>
-    <td><p align="center"><a href="https://flyclops.com/">Flyclops</a> is a independent mobile games studio specializing in casual multi-player games, both asynchronous turn-based, and real-time. Flyclops’s games have been played by millions across&nbsp;the&nbsp;globe.</p></td>
-    <td><p align="center"><a href="https://flyclops.com/games/domino.html">Domino!</a> is super addictive, fast-paced, multiplayer dominoes done right for <a href="https://j.mp/domino_FREE">iOS</a> and <a href="https://flycl.ps/domino_android">Android</a>. This easy-to-learn but impossible-to-master strategy game is beautifully designed and endlessly&nbsp;entertaining!</p></td>
-  </tr>
-</table>
 
 ## What's next?
 
