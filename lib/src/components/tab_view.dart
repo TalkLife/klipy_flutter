@@ -29,7 +29,8 @@ class KlipyTabView extends StatefulWidget {
     String? pos,
     int limit,
     KlipyCategoryObject? category,
-  )? onLoad;
+  )?
+  onLoad;
   final Function(KlipyResultObject? gif)? onSelected;
   final bool showCategories;
   final KlipyTabViewStyle style;
@@ -46,8 +47,8 @@ class KlipyTabView extends StatefulWidget {
     this.showCategories = false,
     this.style = const KlipyTabViewStyle(),
     super.key,
-  })  : featuredCategory = featuredCategory ?? '📈 Featured',
-        gifsPerRow = gifsPerRow ?? 3;
+  }) : featuredCategory = featuredCategory ?? '📈 Featured',
+       gifsPerRow = gifsPerRow ?? 3;
 
   @override
   State<KlipyTabView> createState() => _KlipyTabViewState();
@@ -200,22 +201,24 @@ class _KlipyTabViewState extends State<KlipyTabView>
         crossAxisCount: widget.gifsPerRow,
         crossAxisSpacing: 8,
         keyboardDismissBehavior: _appBarProvider.keyboardDismissBehavior,
-        itemBuilder: (ctx, idx) => ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: KlipySelectableGif(
-            backgroundColor: widget.style.mediaBackgroundColor,
-            onTap: (selectedResult) => _selectedGif(selectedResult),
-            result: _list[idx],
-          ),
-        ),
+        itemBuilder:
+            (ctx, idx) => ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: KlipySelectableGif(
+                backgroundColor: widget.style.mediaBackgroundColor,
+                onTap: (selectedResult) => _selectedGif(selectedResult),
+                result: _list[idx],
+              ),
+            ),
         itemCount: _list.length,
         mainAxisSpacing: 8,
         // Add safe area padding if `KlipyAttributionType.poweredBy` is disabled
-        padding: _tabProvider.attributionType == KlipyAttributionType.poweredBy
-            ? null
-            : EdgeInsets.only(
-                bottom: MediaQuery.of(context).padding.bottom,
-              ),
+        padding:
+            _tabProvider.attributionType == KlipyAttributionType.poweredBy
+                ? null
+                : EdgeInsets.only(
+                  bottom: MediaQuery.of(context).padding.bottom,
+                ),
         scrollDirection: _scrollDirection,
       ),
     );
@@ -376,7 +379,8 @@ class _KlipyTabViewState extends State<KlipyTabView>
   // if you scroll within a threshhold of the bottom of the screen, load more gifs
   void _scrollControllerListener() {
     // trending-gifs, etc
-    final customCategorySelected = _appBarProvider.selectedCategory != null &&
+    final customCategorySelected =
+        _appBarProvider.selectedCategory != null &&
         _appBarProvider.queryText == '';
 
     if (customCategorySelected ||
