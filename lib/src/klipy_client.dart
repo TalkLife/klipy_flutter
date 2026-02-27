@@ -5,9 +5,9 @@ import 'package:klipy_flutter/src/components/components.dart';
 import 'package:klipy_flutter/src/providers/providers.dart';
 import 'package:provider/provider.dart';
 
-const klipyDefaultAnimationStyle = AnimationStyle(
-  duration: Duration(milliseconds: 250),
-  reverseDuration: Duration(milliseconds: 200),
+var klipyDefaultAnimationStyle = AnimationStyle(
+  duration: const Duration(milliseconds: 250),
+  reverseDuration: const Duration(milliseconds: 200),
 );
 
 class KlipyStyle {
@@ -79,8 +79,7 @@ class KlipyClient extends klipy_dart.KlipyClient {
     List<KlipyTab>? tabs,
     bool useSafeArea = true,
   }) {
-    final tabsToDisplay =
-        tabs ??
+    final tabsToDisplay = tabs ??
         [
           KlipyTab(
             name: 'Emojis',
@@ -114,29 +113,26 @@ class KlipyClient extends klipy_dart.KlipyClient {
             child: MultiProvider(
               providers: [
                 ChangeNotifierProvider(
-                  create:
-                      (context) => KlipyAppBarProvider(
-                        queryText,
-                        debounce,
-                        keyboardDismissBehavior: keyboardDismissBehavior,
-                      ),
+                  create: (context) => KlipyAppBarProvider(
+                    queryText,
+                    debounce,
+                    keyboardDismissBehavior: keyboardDismissBehavior,
+                  ),
                 ),
                 ChangeNotifierProvider(
-                  create:
-                      (context) => KlipySheetProvider(
-                        initialExtent: initialExtent,
-                        maxExtent: maxExtent,
-                        minExtent: minExtent,
-                        scrollController: DraggableScrollableController(),
-                      ),
+                  create: (context) => KlipySheetProvider(
+                    initialExtent: initialExtent,
+                    maxExtent: maxExtent,
+                    minExtent: minExtent,
+                    scrollController: DraggableScrollableController(),
+                  ),
                 ),
                 ChangeNotifierProvider(
-                  create:
-                      (context) => KlipyTabProvider(
-                        attributionType: attributionType,
-                        client: this,
-                        selectedTab: tabsToDisplay[initialTabIndex],
-                      ),
+                  create: (context) => KlipyTabProvider(
+                    attributionType: attributionType,
+                    client: this,
+                    selectedTab: tabsToDisplay[initialTabIndex],
+                  ),
                 ),
               ],
               child: KlipySheet(

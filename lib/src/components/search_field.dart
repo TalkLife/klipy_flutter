@@ -84,6 +84,7 @@ class _KlipySearchFieldState extends State<KlipySearchField> {
   late KlipySheetProvider _sheetProvider;
   late TextEditingController _textEditingController;
   final FocusNode _focus = FocusNode();
+  bool _isUpdatingFromProvider = false;
 
   @override
   void initState() {
@@ -97,8 +98,7 @@ class _KlipySearchFieldState extends State<KlipySearchField> {
     _appBarProvider.addListener(_listenerQuery);
 
     // Set Texfield Controller
-    _textEditingController =
-        widget.searchFieldController ??
+    _textEditingController = widget.searchFieldController ??
         TextEditingController(text: _appBarProvider.queryText);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -106,13 +106,13 @@ class _KlipySearchFieldState extends State<KlipySearchField> {
       final debouncer = KlipyDebouncer(delay: _appBarProvider.debounce);
 
       // Listener TextField
-      _textEditingController.addListener(() {
+      if (!_isUpdatingFromProvider) {
         debouncer.call(() {
           if (_appBarProvider.queryText != _textEditingController.text) {
             _appBarProvider.queryText = _textEditingController.text;
           }
         });
-      });
+      }
     });
     super.initState();
   }
@@ -212,8 +212,7 @@ class _KlipySearchFieldState extends State<KlipySearchField> {
                       padding: const EdgeInsets.all(8),
                       child: Icon(
                         Icons.clear,
-                        color:
-                            widget.style.hintStyle.color ??
+                        color: widget.style.hintStyle.color ??
                             const Color(0xFF8A8A86),
                         size: 20,
                       ),
@@ -248,6 +247,32 @@ class _KlipySearchFieldState extends State<KlipySearchField> {
     // on a category. Without this check the cursor will jump to the end.
     if (_textEditingController.text == _appBarProvider.queryText) return;
 
-    _textEditingController.text = _appBarProvider.queryText;
+    if (_textEditingController.text != _appBarProvider.queryText) {
+      _isUpdatingFromProvider = true;
+
+      // Lưu vị trí cursor hiện tại
+      final currentSelection = _textEditingController.selection;
+      final currentText = _textEditingController.text;
+
+      // Update text
+      _textEditingController.text = _appBarProvider.queryText;
+
+      // Restore cursor position if possible
+      if (_appBarProvider.queryText.isNotEmpty &&
+          currentText.isNotEmpty &&
+          _appBarProvider.queryText.startsWith(currentText)) {
+        // If new text starts with old text, keep cursor position
+        _textEditingController.selection = TextSelection.collapsed(
+          offset: currentSelection.baseOffset,
+        );
+      } else {
+        // If not, set cursor to the end of the text
+        _textEditingController.selection = TextSelection.collapsed(
+          offset: _appBarProvider.queryText.length,
+        );
+      }
+
+      _isUpdatingFromProvider = false;
+    }
   }
 }
