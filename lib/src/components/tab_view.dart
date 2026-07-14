@@ -185,8 +185,8 @@ class _KlipyTabViewState extends State<KlipyTabView>
             // Add safe area padding if `KlipyAttributionType.poweredBy` is disabled
             padding:
                 _tabProvider.attributionType == KlipyAttributionType.poweredBy
-                    ? EdgeInsets.zero
-                    : const EdgeInsets.only(bottom: 0),
+                ? EdgeInsets.zero
+                : const EdgeInsets.only(bottom: 0),
             scrollDirection: _scrollDirection,
           ),
         ),
@@ -201,24 +201,20 @@ class _KlipyTabViewState extends State<KlipyTabView>
         crossAxisCount: widget.gifsPerRow,
         crossAxisSpacing: 8,
         keyboardDismissBehavior: _appBarProvider.keyboardDismissBehavior,
-        itemBuilder:
-            (ctx, idx) => ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: KlipySelectableGif(
-                backgroundColor: widget.style.mediaBackgroundColor,
-                onTap: (selectedResult) => _selectedGif(selectedResult),
-                result: _list[idx],
-              ),
-            ),
+        itemBuilder: (ctx, idx) => ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: KlipySelectableGif(
+            backgroundColor: widget.style.mediaBackgroundColor,
+            onTap: (selectedResult) => _selectedGif(selectedResult),
+            result: _list[idx],
+          ),
+        ),
         itemCount: _list.length,
         mainAxisSpacing: 8,
         // Add safe area padding if `KlipyAttributionType.poweredBy` is disabled
-        padding:
-            _tabProvider.attributionType == KlipyAttributionType.poweredBy
-                ? null
-                : EdgeInsets.only(
-                  bottom: MediaQuery.of(context).padding.bottom,
-                ),
+        padding: _tabProvider.attributionType == KlipyAttributionType.poweredBy
+            ? null
+            : EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
         scrollDirection: _scrollDirection,
       ),
     );
@@ -265,6 +261,10 @@ class _KlipyTabViewState extends State<KlipyTabView>
 
     // Wait for a frame so that we can ensure that `scrollController` is attached
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // The tab may have been disposed or its scroll view never attached by
+      // now (empty results, tab switched away) — reading `position` then
+      // throws "Bad state: No element". TD-38596.
+      if (!mounted || !_scrollController.hasClients) return;
       if (_scrollController.position.extentAfter == 0) {
         _loadMore(fillScrollableArea: true);
       }
@@ -275,7 +275,10 @@ class _KlipyTabViewState extends State<KlipyTabView>
     try {
       final fromKlipy = await client.categories();
       final featuredGifResponse = await client.featured(limit: 1);
-      final featuredGif = featuredGifResponse?.results.first;
+      final featuredGif =
+          featuredGifResponse == null || featuredGifResponse.results.isEmpty
+          ? null
+          : featuredGifResponse.results.first;
       if (featuredGif != null) {
         fromKlipy.insert(
           0,
@@ -318,12 +321,11 @@ class _KlipyTabViewState extends State<KlipyTabView>
 
       _isLoading = true;
 
-      // Offset pagination for query
-      if (_collection == null) {
-        offset = null;
-      } else {
-        offset = _collection!.next;
-      }
+      // Offset pagination for query. Read _collection through a local
+      // snapshot: the app-bar listener resets it to null while onLoad is
+      // awaited (e.g. while typing), so `_collection!` can crash after any
+      // interleave. TD-38603.
+      offset = _collection?.next;
 
       if (widget.onLoad != null) {
         final response = await widget.onLoad?.call(
@@ -338,9 +340,12 @@ class _KlipyTabViewState extends State<KlipyTabView>
       }
 
       // Set result to list
-      if (_collection != null && _collection!.results.isNotEmpty && mounted) {
+      final collection = _collection;
+      if (!mounted) {
+        _isLoading = false;
+      } else if (collection != null && collection.results.isNotEmpty) {
         setState(() {
-          _list.addAll(_collection!.results);
+          _list.addAll(collection.results);
           _isLoading = false;
         });
       } else {
@@ -358,19 +363,27 @@ class _KlipyTabViewState extends State<KlipyTabView>
       rethrow;
     }
 
-    if (fillScrollableArea && _scrollController.position.extentAfter == 0) {
+    // hasClients guard: the scroll view can be detached/disposed by the time
+    // the awaits above complete — `position` would throw "Bad state:
+    // No element". TD-38598.
+    if (fillScrollableArea &&
+        mounted &&
+        _scrollController.hasClients &&
+        _scrollController.position.extentAfter == 0) {
       Future.microtask(() => _loadMore(fillScrollableArea: true));
     }
   }
 
   // Return selected gif
   void _selectedGif(KlipyResultObject gif) {
-    try {
-      // https://docs.klipy.com/migrate-from-tenor/register-share
-      client.registerShare(gif.id, search: _appBarProvider.queryText);
-    } catch (e) {
-      // do nothing if it fails
-    }
+    // https://docs.klipy.com/migrate-from-tenor/register-share
+    // registerShare is async, so the previous sync try/catch never caught its
+    // network errors — they surfaced as unhandled KlipyNetworkException.
+    // It is a best-effort analytics call: swallow failures explicitly.
+    // TD-38614.
+    client
+        .registerShare(gif.id, search: _appBarProvider.queryText)
+        .catchError((Object e) => false);
 
     // return result to the consumer
     Navigator.pop(context, gif.copyWith(source: _tabProvider.selectedTab.name));
@@ -386,7 +399,8 @@ class _KlipyTabViewState extends State<KlipyTabView>
     if (customCategorySelected ||
         _appBarProvider.queryText != '' ||
         widget.showCategories == false) {
-      if (_scrollController.positions.last.extentAfter.lessThan(500) &&
+      if (_scrollController.positions.isNotEmpty &&
+          _scrollController.positions.last.extentAfter.lessThan(500) &&
           !_isLoading) {
         _loadMore();
       }
