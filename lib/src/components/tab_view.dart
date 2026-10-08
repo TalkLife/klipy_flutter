@@ -207,6 +207,7 @@ class _KlipyTabViewState extends State<KlipyTabView>
             backgroundColor: widget.style.mediaBackgroundColor,
             onTap: (selectedResult) => _selectedGif(selectedResult),
             result: _list[idx],
+            index: idx,
           ),
         ),
         itemCount: _list.length,
