@@ -14,7 +14,17 @@ const featuredCategoryPath = '##trending-gifs';
 class KlipyTabViewStyle {
   final Color mediaBackgroundColor;
 
-  const KlipyTabViewStyle({this.mediaBackgroundColor = Colors.white});
+  /// Shown when a search answers with no results.
+  final String noResultsText;
+
+  /// Style of [noResultsText]. Defaults to the theme's medium body text.
+  final TextStyle? noResultsTextStyle;
+
+  const KlipyTabViewStyle({
+    this.mediaBackgroundColor = Colors.white,
+    this.noResultsText = 'No results found',
+    this.noResultsTextStyle,
+  });
 }
 
 class KlipyTabView extends StatefulWidget {
@@ -83,6 +93,9 @@ class _KlipyTabViewState extends State<KlipyTabView>
   /// State to tell us if we can request more gifs.
   bool _hasMoreGifs = true;
 
+  /// The current search was answered with no results at all.
+  bool _noResults = false;
+
   // Offset
   String? offset;
 
@@ -144,6 +157,24 @@ class _KlipyTabViewState extends State<KlipyTabView>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    // KLIPY answers some searches with an empty list. Without this the tab
+    // either kept its spinner (no categories) or showed a blank grid, and the
+    // search looked like a load that never finished.
+    if (_list.isEmpty && _noResults) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            widget.style.noResultsText,
+            textAlign: TextAlign.center,
+            style:
+                widget.style.noResultsTextStyle ??
+                Theme.of(context).textTheme.bodyMedium,
+          ),
+        ),
+      );
+    }
+
     if (_list.isEmpty && _categories.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -328,13 +359,32 @@ class _KlipyTabViewState extends State<KlipyTabView>
       // interleave. TD-38603.
       offset = _collection?.next;
 
+      // What this request asks for: the search can change while it is
+      // awaited.
+      final requestedQuery = _appBarProvider.queryText.trim();
+      final requestedCategory = _appBarProvider.selectedCategory;
+      KlipyResponse? response;
+
       if (widget.onLoad != null) {
-        final response = await widget.onLoad?.call(
-          _appBarProvider.queryText.trim(),
+        response = await widget.onLoad?.call(
+          requestedQuery,
           offset,
           requestLimit,
-          _appBarProvider.selectedCategory,
+          requestedCategory,
         );
+
+        // The search changed while this request was in flight. Its answer
+        // belongs to the old search, and the new search was never sent (a
+        // load was already running), so the tab would spin on it for good.
+        // Drop the answer and load what is being asked for now.
+        if (mounted &&
+            (requestedQuery != _appBarProvider.queryText.trim() ||
+                requestedCategory != _appBarProvider.selectedCategory)) {
+          _isLoading = false;
+          _initialGifFetch();
+          return;
+        }
+
         if (response != null) {
           _collection = response;
         }
@@ -353,6 +403,8 @@ class _KlipyTabViewState extends State<KlipyTabView>
         // so it refreshes on something like categories
         setState(() {
           _isLoading = false;
+          // The API answered, with nothing, and nothing was loaded before.
+          _noResults = response != null && _list.isEmpty;
         });
       }
     } on KlipyNetworkException {
@@ -420,6 +472,7 @@ class _KlipyTabViewState extends State<KlipyTabView>
       _list = [];
       _collection = null;
       _hasMoreGifs = true;
+      _noResults = false;
     });
 
     _initialGifFetch();
